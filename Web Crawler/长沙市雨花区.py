@@ -8,7 +8,7 @@ Created on Tue Jun 26 09:43:02 2018
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time,datetime
-import urllib
+import urllib 
 import re
 import os
 import urllib.request as urllib2
