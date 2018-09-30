@@ -33,5 +33,4 @@ for i in range(len(my_str)):
                 center = i
     except Exception:
         continue
-print(center)
 print(total_length)
