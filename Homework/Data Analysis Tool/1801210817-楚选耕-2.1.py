@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wen Oct 3 2018
+@author: Purkialo
+"""
 import numpy as np
 
 K_num = 20
