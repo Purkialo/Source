@@ -14,7 +14,6 @@ C4.5算法
 """
 import numpy as np
 import math
-#import matplotlib.pyplot as plt
 
 def loaddata():
     data = []
@@ -29,7 +28,7 @@ def loaddata():
     length = len(name)
     length_train = int(0.95 * length)
     return np.array(data[:length_train]),np.array(data[length_train:]),np.array(name[:length_train]),np.array(name[length_train:])
-
+#计算香农熵
 def calu_D(my_labelset):
     labelset = my_labelset.copy()
     label = {}
@@ -188,7 +187,6 @@ if __name__ == '__main__':
             else:
                 data_train[i][j] = 1
     data_train = np.hstack((data_train,label_train.reshape(length_train,1)))
-    #print(data_train)#[:,[1,-1]])
     #已取得修改后的离散性数据data_train
     decision_tree = tree_generator(div_IGR,data_train)
     print(decision_tree)
