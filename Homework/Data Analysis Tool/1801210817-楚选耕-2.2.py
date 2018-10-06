@@ -3,8 +3,18 @@
 Created on Wen Oct 3 2018
 @author: Purkialo
 """
+
+"""
+C4.5算法
+    香农熵
+    条件熵
+    信息增益
+    属性离散程度
+    信息增益率(IGR)
+"""
 import numpy as np
 import math
+#import matplotlib.pyplot as plt
 
 def loaddata():
     data = []
@@ -17,7 +27,7 @@ def loaddata():
             data.append(buffer[:-1])
             name.append(buffer[-1])
     length = len(name)
-    length_train = 100#int(0.95 * length)
+    length_train = int(0.95 * length)
     return np.array(data[:length_train]),np.array(data[length_train:]),np.array(name[:length_train]),np.array(name[length_train:])
 
 def calu_D(my_labelset):
@@ -103,7 +113,6 @@ def arrangedata(data_train,num):
         if(int(data_train[i][num]) != 0):
             break
     return data_train[:i],data_train[i:]
-#生成决策树，使用字典保存
 def most_result(label_list):
     label_nums = {} 
     for label in label_list: 
@@ -113,6 +122,7 @@ def most_result(label_list):
             label_nums[label] = 1
     label_nums = sorted(label_nums.items(),key=lambda result:result[1],reverse=True)
     return label_nums[0][0]
+#生成决策树，使用字典保存
 def tree_generator(IGR,data_train):
     #print(IGR)
     for i in range(len(IGR)):
@@ -142,8 +152,24 @@ def tree_generator(IGR,data_train):
     decision_tree[it_decision_tree][0] = tree_generator(IGR0,data_train0)
     decision_tree[it_decision_tree][1] = tree_generator(IGR1,data_train1)
     return decision_tree
-def tree_sep(decision_tree,data):
-    return 1
+def tree_classify(decision_tree,data):
+    #for key in decision_tree.keys():
+    #    print(key)
+    result = 0
+    if not(isinstance(decision_tree,dict)):
+        result = decision_tree
+        return decision_tree
+    key = list(decision_tree)[0]
+    div_point = decision_tree[key]['pos']
+    #print(data[key])
+    if(float(data[key]) <= float(div_point)):
+        child = 0
+    else:
+        child = 1
+    result = tree_classify(decision_tree[key][child],data)
+    return result
+#def paint(decision_tree):
+
 if __name__ == '__main__':
     data_train,data_test,label_train,label_test = loaddata()
     length_train = len(label_train)
@@ -166,8 +192,13 @@ if __name__ == '__main__':
     #已取得修改后的离散性数据data_train
     decision_tree = tree_generator(div_IGR,data_train)
     print(decision_tree)
-    data_test = data_test[:10]
-    label_test = label_test[:10]
-    print(data_test)
-    print(label_test)
-    tree_sep(decision_tree,data_test)
+    flag_w = 0
+    for i in range(len(label_test)):
+        result = tree_classify(decision_tree,data_test[i])
+        if(result != label_test[i]):
+            flag_w = flag_w + 1
+            print("Predicted class: %s, actually: %s, it's wrong!" % (str(result),str(label_test[i])))
+        else:
+            print("Predicted class: %s, actually: %s, it's right!" % (str(result),str(label_test[i])))
+    
+    print("Accuracy: ",(len(label_test) - flag_w)/len(label_test))

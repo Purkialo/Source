@@ -27,31 +27,32 @@ def count(input):
     result = sorted(result.items(),key=lambda result:result[1],reverse=True) 
     return result
 
-data = []
-name = []
+if __name__ == '__main__':
+    data = []
+    name = []
 
-with open("letter-recognition.data") as file:
-    for line in file:
-        data.append(line.strip().split(',')[1:])
-        name.append(line.strip().split(',')[0])
-length = len(name)
-dataset = np.array(data,dtype=int)
-dataname = np.array(name)
-length_train = int(0.95 * length)
-length_test = length - length_train
-testset = dataset[length_train:]
-testset = dataset[length_train:].reshape(length_test,16)
-testname = dataname[length_train:].reshape(length_test,1)
-flag_r = 0
-flag_w = 0
-for i in range(length_test):
-    result = calcu(testset[i],dataset)
-    dic = count(result[0:K_num])
-    if(dic[0][0] != testname[i][0]):
-        print(dic[:3])
-        flag_w = flag_w + 1
-        print("Predicted letter: %s, actually: %s, it's wrong!" % (str(dic[0][0]),str(testname[i][0])))
-    else:
-        flag_r = flag_r + 1
-        print("Predicted letter: %s, actually: %s, it's right!" % (str(dic[0][0]),str(testname[i][0])))
-print("Accuracy: ",flag_r/(flag_r + flag_w))
+    with open("letter-recognition.data") as file:
+        for line in file:
+            data.append(line.strip().split(',')[1:])
+            name.append(line.strip().split(',')[0])
+    length = len(name)
+    dataset = np.array(data,dtype=int)
+    dataname = np.array(name)
+    length_train = int(0.95 * length)
+    length_test = length - length_train
+    testset = dataset[length_train:]
+    testset = dataset[length_train:].reshape(length_test,16)
+    testname = dataname[length_train:].reshape(length_test,1)
+    flag_r = 0
+    flag_w = 0
+    for i in range(length_test):
+        result = calcu(testset[i],dataset)
+        dic = count(result[0:K_num])
+        if(dic[0][0] != testname[i][0]):
+            print(dic[:3])
+            flag_w = flag_w + 1
+            print("Predicted letter: %s, actually: %s, it's wrong!" % (str(dic[0][0]),str(testname[i][0])))
+        else:
+            flag_r = flag_r + 1
+            print("Predicted letter: %s, actually: %s, it's right!" % (str(dic[0][0]),str(testname[i][0])))
+    print("Accuracy: ",flag_r/(flag_r + flag_w))
