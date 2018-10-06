@@ -114,11 +114,10 @@ def most_result(label_list):
     label_nums = sorted(label_nums.items(),key=lambda result:result[1],reverse=True)
     return label_nums[0][0]
 def tree_generator(IGR,data_train):
-    print(IGR)
+    #print(IGR)
     for i in range(len(IGR)):
         if(IGR[i] != -1):
             IGR[i] = calu_label_D(data_train[:,-1],data_train[:,i])
-    print(IGR)
     label_num = IGR.index(max(IGR))
     label_list = data_train[:,-1]
     if np.sum(label_list == label_list[0]) == len(label_list):
@@ -129,21 +128,22 @@ def tree_generator(IGR,data_train):
     IGR[label_num] = -1
     decision_tree = {it_decision_tree:{'pos':{},0:{},1:{}}}
     decision_tree[it_decision_tree]['pos'] = div_point[label_num]
-    """data_train0,data_train1 = arrangedata(data_train,9)
-    print(IGR)
+    data_train0,data_train1 = arrangedata(data_train,label_num)
+    #print(IGR)
     IGR0 = []
     IGR1 = []
     for i in range(len(IGR)):
         if(IGR[i] != -1):
-            IGR0[i] = calu_label_D(data_train0,data_train0[:,-1])
-            IGR1[i] = calu_label_D(data_train1,data_train1[:,-1])
+            IGR0.append(calu_label_D(data_train0[:,-1],data_train0[:,-1]))
+            IGR1.append(calu_label_D(data_train1[:,-1],data_train1[:,-1]))
         else:
-            IGR0[i] = -1
-            IGR1[i] = -1
+            IGR0.append(-1)
+            IGR1.append(-1)
     decision_tree[it_decision_tree][0] = tree_generator(IGR0,data_train0)
-    decision_tree[it_decision_tree][1] = tree_generator(IGR1,data_train1)"""
+    decision_tree[it_decision_tree][1] = tree_generator(IGR1,data_train1)
     return decision_tree
-
+def tree_sep(decision_tree,data):
+    return 1
 if __name__ == '__main__':
     data_train,data_test,label_train,label_test = loaddata()
     length_train = len(label_train)
@@ -166,3 +166,8 @@ if __name__ == '__main__':
     #已取得修改后的离散性数据data_train
     decision_tree = tree_generator(div_IGR,data_train)
     print(decision_tree)
+    data_test = data_test[:10]
+    label_test = label_test[:10]
+    print(data_test)
+    print(label_test)
+    tree_sep(decision_tree,data_test)
