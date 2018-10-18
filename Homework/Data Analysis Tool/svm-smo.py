@@ -238,21 +238,26 @@ def calcWs(alphas,dataArr,classLabels):
 	    w - 计算得到的w
 	"""
 	X = np.mat(dataArr)
-	labelMat = np.mat(classLabels).transpose()
+	labelMat = np.mat(classLabels).T
 	m,n = np.shape(X)
 	w = np.zeros((n,1))
 	for i in range(m):
 		w += np.multiply(alphas[i]*labelMat[i],X[i,:].T)
 	return w
 
+def classifer(data,w,b):
+	res = int(np.mat([data]) * np.mat(w) + b)
+	return np.sign(res)
+
 if __name__ == '__main__':
 	dataArr, classLabels = loadDataSet('testSet.txt')
 	b, alphas = smoP(dataArr, classLabels, 0.6, 0.001, 40)
 	w = calcWs(alphas,dataArr, classLabels)
-	num = 2
-	print(dataArr[num])
-	print(w)
-	res = np.multiply(dataArr[num],w)+b
-	print(res)
-	print(dataArr[num])
-	print(classLabels[num])
+	flag_w = 0
+	for i in range(100):
+		if(classifer(dataArr[i],w,b) != classLabels[i]):
+			flag_w += 1
+			print("Predicted class: %s, actually: %s, it's wrong!" % (str(classifer(dataArr[i],w,b)),str(classLabels[i])))
+		else:
+			print("Predicted class: %s, actually: %s, it's right!" % (str(classifer(dataArr[i],w,b)),str(classLabels[i])))
+	print("Accuracy: ",(100 - flag_w)/100)		
