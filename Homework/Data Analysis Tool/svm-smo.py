@@ -58,7 +58,6 @@ def calcEk(oS, k):
 	Returns:
 	    Ek - 标号为k的数据误差
 	"""
-
 	fXk = float(np.multiply(oS.alphas,oS.labelMat).T*(oS.X*oS.X[k,:].T) + oS.b)#n*1矩阵
 	Ek = fXk - float(oS.labelMat[k])
 	return Ek
@@ -247,7 +246,11 @@ def calcWs(alphas,dataArr,classLabels):
 
 if __name__ == '__main__':
 	dataArr, classLabels = loadDataSet('testSet.txt')
+	dataArr = np.array(dataArr)
+	classLabels = np.array(classLabels)
 	b, alphas = smoP(dataArr, classLabels, 0.6, 0.001, 40)
+	print(dataArr)
+	print(classLabels)
 	w = calcWs(alphas,dataArr, classLabels)
 	num = 2
 	print(dataArr[num])
