@@ -121,5 +121,5 @@ def Linear_regression(data):
 
 if __name__ =='__main__':
     data = loaddata()
-    print(data[0])
     Linear_regression(data)
+    

@@ -44,10 +44,46 @@ def loadDataSet(fileName):
 	dataMat = []; labelMat = []
 	fr = open(fileName)
 	for line in fr.readlines():                                     #逐行读取，滤除空格等
-		lineArr = line.strip().split('\t')
-		dataMat.append([float(lineArr[0]), float(lineArr[1])])      #添加数据
-		labelMat.append(float(lineArr[2]))                          #添加标签
+		lineArr = line.strip().split(',')
+		dataMat.append(lineArr[:-1])      					  #添加数据
+		labelMat.append(lineArr[-1])                          #添加标签
+	
 	return dataMat,labelMat
+
+def preprocessor(dataMat,labelMat):
+	nums2lables = {}
+	lables2nums = {}
+	classnum = 1
+	for i in labelMat:
+		if not(i in nums2lables.values()):
+			nums2lables[classnum] = i
+			lables2nums[i] = classnum
+			classnum += 1
+	for i in range(len(labelMat)):
+		labelMat[i] = lables2nums[labelMat[i]]
+	data = np.concatenate((dataMat,np.array([labelMat]).T),axis = 1)
+	delnum = []
+	for i in range(len(data)):
+		if(data[i][-2] == '?'):
+			delnum.append(i)
+		if(data[i][-1] == '2'):
+			data[i][-1] = -1
+	data = np.delete(data,delnum,axis = 0)
+	for i in range(7):
+		data[:,i] = translable(data[:,i])
+	data = data.astype(int)
+	return data[:,:-1],data[:,-1]
+
+def translable(labelMat):
+	lables2nums = {}
+	classnum = 1
+	for i in labelMat:
+		if not(i in lables2nums.keys()):
+			lables2nums[i] = classnum
+			classnum += 1
+	for i in range(len(labelMat)):
+		labelMat[i] = lables2nums[labelMat[i]]
+	return labelMat
 
 def calcEk(oS, k):
 	"""
@@ -58,7 +94,6 @@ def calcEk(oS, k):
 	Returns:
 	    Ek - 标号为k的数据误差
 	"""
-
 	fXk = float(np.multiply(oS.alphas,oS.labelMat).T*(oS.X*oS.X[k,:].T) + oS.b)#n*1矩阵
 	Ek = fXk - float(oS.labelMat[k])
 	return Ek
@@ -246,18 +281,28 @@ def calcWs(alphas,dataArr,classLabels):
 	return w
 
 def classifer(data,w,b):
-	res = int(np.mat([data]) * np.mat(w) + b)
-	return np.sign(res)
+	res = np.mat([data]) * np.mat(w) + b
+	return int(np.sign(res))
 
 if __name__ == '__main__':
-	dataArr, classLabels = loadDataSet('testSet.txt')
-	b, alphas = smoP(dataArr, classLabels, 0.6, 0.001, 40)
-	w = calcWs(alphas,dataArr, classLabels)
+	dataArr, classLabels = loadDataSet('post-operative.data')
+	dataArr,classLabels = preprocessor(dataArr,classLabels)
+	#print(dataArr,classLabels)
+	lentrain = int(len(dataArr) * 0.80)
+	lentest = len(dataArr) - lentrain
+	#print(dataArr)
+	#print(classLabels)
+	b, alphas = smoP(dataArr[:], classLabels[:], 0.6, 0.001, 40)
+	w = calcWs(alphas,dataArr[:], classLabels[:])
+	#print(w)
+	#print(b)
 	flag_w = 0
-	for i in range(100):
-		if(classifer(dataArr[i],w,b) != classLabels[i]):
+	for i in range(lentest):
+		resclass = classifer(dataArr[lentrain + i],w,b)
+		target = classLabels[lentrain + i]
+		if(resclass != target):
 			flag_w += 1
-			print("Predicted class: %s, actually: %s, it's wrong!" % (str(classifer(dataArr[i],w,b)),str(classLabels[i])))
+			print("Predicted class: %s, actually: %s, it's wrong!" % (str(resclass),str(target)))
 		else:
-			print("Predicted class: %s, actually: %s, it's right!" % (str(classifer(dataArr[i],w,b)),str(classLabels[i])))
-	print("Accuracy: ",(100 - flag_w)/100)		
+			print("Predicted class: %s, actually: %s, it's right!" % (str(resclass),str(target)))
+	print("Accuracy: ",(lentest - flag_w)/lentest)
