@@ -17,7 +17,7 @@ class optStruct:
 	"""
 	数据结构，维护所有需要操作的值
 	Parameters：
-		dataMatIn - 数据矩阵
+		dataMatIn - 数据矩阵 
 		classLabels - 数据标签
 		C - 松弛变量
 		toler - 容错率
