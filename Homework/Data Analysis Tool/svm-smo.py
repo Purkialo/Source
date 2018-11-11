@@ -226,7 +226,7 @@ def innerL(i, oS):
 		return 0
 
 def smoP(dataMatIn, classLabels, C, toler, maxIter):
-	"""
+	'''
 	完整的线性SMO算法
 	Parameters：
 		dataMatIn - 数据矩阵
@@ -237,7 +237,7 @@ def smoP(dataMatIn, classLabels, C, toler, maxIter):
 	Returns:
 		oS.b - SMO算法计算的b
 		oS.alphas - SMO算法计算的alphas
-	"""
+	'''
 	oS = optStruct(np.mat(dataMatIn), np.mat(classLabels).transpose(), C, toler)					#初始化数据结构
 	innerL(1,oS)
 	iter = 0 																						#初始化当前迭代次数
