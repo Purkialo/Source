@@ -37,6 +37,7 @@ float nms_sigma = 0.5;
 int main(int argc, char *argv[]){
     void genprior(float priors[][4]);
     void convert_locations_to_boxes(float boxes[][4],const float priors[][4],const float * detection);
+    std::vector<std::vector<float>> hard_nms(std::vector<std::vector<float>> boxes_probs,int width,int height);
 
     std::cout << "InferenceEngine: " << GetInferenceEngineVersion() << std::endl;
     //读取模型
@@ -72,22 +73,19 @@ int main(int argc, char *argv[]){
     }
     //处理输出
     std::cout << "Preparing output blobs" << std::endl;
-
     std::string outputName;
     DataPtr outputInfo;
     for (const auto& out : output_info) {
         outputName = out.first;
         outputInfo = out.second;
     }
-    const SizeVector outputDims = outputInfo->getTensorDesc().getDims();
+    //const SizeVector outputDims = outputInfo->getTensorDesc().getDims();
     outputInfo->setPrecision(Precision::FP32);
-    std::cout << "Output layer is " << outputName << std::endl;
-    std::cout << "Batch size is " << outputDims[0] << std::endl;
-    std::cout << "Batch size is " << outputDims[1] << std::endl;
-    std::cout << "Batch size is " << outputDims[2] << std::endl;
-    std::cout << "Batch size is " << outputDims[3] << std::endl;
-    const int maxProposalCount = outputDims[2];
-    const int objectSize = outputDims[3];
+    // std::cout << "Output layer is " << outputName << std::endl;
+    // std::cout << "Batch size is " << outputDims[0] << std::endl;
+    // std::cout << "Batch size is " << outputDims[1] << std::endl;
+    // std::cout << "Batch size is " << outputDims[2] << std::endl;
+    // std::cout << "Batch size is " << outputDims[3] << std::endl;
 
     //加载模型
     std::cout << "Loading model to the plugin" << std::endl;
@@ -99,7 +97,7 @@ int main(int argc, char *argv[]){
     /** Collect images data ptrs **/
     std::vector<std::string> images;
     images.push_back("/home/student/cxg_workspace/test-ov/1");
-    images.push_back("/home/student/cxg_workspace/test-ov/1");
+    images.push_back("/home/student/cxg_workspace/test-ov/2");
 
     std::vector<std::shared_ptr<unsigned char>> imagesData, originalImagesData;
     std::vector<int> imageWidths, imageHeights;
@@ -119,18 +117,19 @@ int main(int argc, char *argv[]){
             imageHeights.push_back(reader->height());
         }
     }
+
     if (imagesData.empty())
         std::cout << "Valid input images were not found!" << std::endl;
 
     size_t batchSize = network.getBatchSize();
-    std::cout << "Batch size is " << std::to_string(batchSize) << std::endl;
-    if (batchSize != imagesData.size()) {
-        std::cout << "Number of images " + std::to_string(imagesData.size()) + \
-            " doesn't match batch size " + std::to_string(batchSize) << std::endl;
-        std::cout << std::to_string(std::min(imagesData.size(), batchSize)) + \
-            " images will be processed" << std::endl;
-        batchSize = std::min(batchSize, imagesData.size());
-    }
+    // std::cout << "Batch size is " << std::to_string(batchSize) << std::endl;
+    // if (batchSize != imagesData.size()) {
+    //     std::cout << "Number of images " + std::to_string(imagesData.size()) + \
+    //         " doesn't match batch size " + std::to_string(batchSize) << std::endl;
+    //     std::cout << std::to_string(std::min(imagesData.size(), batchSize)) + \
+    //         " images will be processed" << std::endl;
+    //     batchSize = std::min(batchSize, imagesData.size());
+    // }
 
     /** Creating input blob **/
     Blob::Ptr imageInput = infer_request.GetBlob(imageInputName);
@@ -192,6 +191,13 @@ int main(int argc, char *argv[]){
     const Blob::Ptr output_blob = infer_request.GetBlob(outputName);
     // Const
     float* detection = static_cast<PrecisionTrait<Precision::FP32>::value_type*>(output_blob->buffer());
+    
+    for(int myk = 0; myk < 6 * length; myk+=6){
+        float exp_1 = exp(detection[myk]);
+        float exp_2 = exp(detection[myk + 1]);
+        detection[myk] = exp_1/(exp_1 + exp_2);
+        detection[myk + 1] = exp_2/(exp_1 + exp_2);
+    }
 
     float priors[length][4];
     float boxes[length][4];
@@ -205,7 +211,7 @@ int main(int argc, char *argv[]){
         subvector.push_back(boxes[myk][1]);
         subvector.push_back(boxes[myk][2]);
         subvector.push_back(boxes[myk][3]);
-        subvector.push_back(detection[myk * 6]);
+        subvector.push_back(detection[myk * 6 + 1]);
         boxes_probs.push_back(subvector);
         subvector.clear();
     }
@@ -213,17 +219,18 @@ int main(int argc, char *argv[]){
     for(int i; i < boxes_probs.size(); i++){
         if(boxes_probs[i][4] > nms_prob_threshold){
             subset_boxes_probs.push_back(boxes_probs[i]);
+            //std::cout << boxes_probs[i][4] << ' '; 
         }
     }
-
-    // for(int myk = 0; myk < 60; myk+=6){
-    //     float exp_1 = exp(detection[myk]);
-    //     float exp_2 = exp(detection[myk + 1]);
-    //     detection[myk] = exp_1/(exp_1 + exp_2);
-    //     detection[myk + 1] = exp_2/(exp_1 + exp_2);
-    //     std::cout << myk / 6 + 1 << ' ' << detection[myk] << ' ' << detection[myk + 1]  << ' ';
-    //     std::cout << boxes[myk / 6][0] << ' ' << boxes[myk / 6][1] << ' ' << boxes[myk / 6][2] << ' ' << boxes[myk / 6][3] << std::endl;
-    // }
+    //std::cout << subset_boxes_probs.size() << std::endl;
+    
+    std::vector<std::vector<float>> nms_res;
+    nms_res = hard_nms(subset_boxes_probs,imageWidths[0],imageHeights[0]);
+    std::cout << nms_res.size() << std::endl;
+    
+    for(int i = 0; i < nms_res.size(); i++){
+        std::cout << nms_res[i][0] << ' ' << nms_res[i][1] << ' '<<  nms_res[i][2] << ' ' << nms_res[i][3] << ' ' << nms_res[i][4] << ' ' << std::endl;
+    }
 
     std::cout << std::endl << "total inference time: " << total << std::endl;
     std::cout << "Average running time of one iteration: " << total / static_cast<double>(1) << " ms" << std::endl;
@@ -314,37 +321,46 @@ void convert_locations_to_boxes(float boxes[][4],const float priors[][4],const f
         boxes[i][3] = buf_boxes[i][1] + buf_boxes[i][3] / 2;
     }
 }
-bool cmp(<std::vector <float>> a,<std::vector <float>> b){
-    return a[4] > b[4]
+bool cmp(std::vector <float> a,std::vector <float> b){
+    return a[4] > b[4];
 }
 //boxes : left_top , right_bottom
 float area_of(float a,float b,float c,float d){
-    c = (c - a) > 0 ? c - a , 0;
-    d = (d - b) > 0 ? d - b , 0;
-    return c * d
+    c = (c - a) > 0 ? c - a : 0;
+    d = (d - b) > 0 ? d - b : 0;
+    return c * d;
 }
 float iou_of(std::vector<float> a, std::vector<float> b){
     float position[4];
-    position[0] = a[0] > b[0] ? a , b;
-    position[1] = a[1] > b[1] ? a , b;
-    position[2] = a[2] < b[2] ? a , b;
-    position[3] = a[3] < b[3] ? a , b;
+    position[0] = a[0] > b[0] ? a[0] : b[0];
+    position[1] = a[1] > b[1] ? a[1] : b[1];
+    position[2] = a[2] < b[2] ? a[2] : b[2];
+    position[3] = a[3] < b[3] ? a[3] : b[3];
 
-    overlap_area = area_of(position[0],position[1],position[2],position[3]);
-    area0 = area_of(a[0],a[1],a[2],a[3]);
-    area1 = area_of(b[0],b[1],b[2],b[3]);
+    float overlap_area = area_of(position[0],position[1],position[2],position[3]);
+    float area0 = area_of(a[0],a[1],a[2],a[3]);
+    float area1 = area_of(b[0],b[1],b[2],b[3]);
     return overlap_area / (area0 + area1 - overlap_area + 1e-5);
 }
-std::vector<std::vector<float>> hard_nms(std::vector<std::vector<float>> boxes_probs){
-    sort(boxes_probs, boxes_probs + boxes_probs.size(), cmp);
+std::vector<std::vector<float>> hard_nms(std::vector<std::vector<float>> boxes_probs,int width,int height){
+    sort(boxes_probs.begin(), boxes_probs.end(), cmp);
+    for(int i = boxes_probs.size() - 1; i >= nms_candidate_size - 1; i--){
+        boxes_probs.erase(boxes_probs.begin() + i);
+    }
     std::vector<std::vector<float>> result;
     while(boxes_probs.size() > 0){
         result.push_back(boxes_probs[0]);
-        boxes_probs.pop_front();
-        for(i = boxes_probs.size() - 1; i >= 0; i--){
+        boxes_probs.erase(boxes_probs.begin());
+        for(int i = boxes_probs.size() - 1; i >= 0; i--){
             if(iou_of(boxes_probs[i],result.back()) > nms_iou_threshold)
                 boxes_probs.erase(boxes_probs.begin() + i);
         }
+    }
+    for(int i; i < result.size(); i++){
+        result[i][0] *= width;
+        result[i][1] *= height;
+        result[i][2] *= width;
+        result[i][3] *= height;
     }
     return result;
 }
