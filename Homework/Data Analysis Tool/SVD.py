@@ -101,3 +101,6 @@ with open("anonymous-msweb.data") as file:
 data = array(data[1:])
 print(data)
 U,Sigma,VT = la.svd(data)
+print(U)
+print(Sigma)
+print(VT)
