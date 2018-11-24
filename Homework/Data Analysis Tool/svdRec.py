@@ -1,29 +1,6 @@
-
 from numpy import *
 from numpy import linalg as la
 
-def loadExData():
-    return[[0, 0, 0, 2, 2],
-           [0, 0, 0, 3, 3],
-           [0, 0, 0, 1, 1],
-           [1, 1, 1, 0, 0],
-           [2, 2, 2, 0, 0],
-           [5, 5, 5, 0, 0],
-           [1, 1, 1, 0, 0]]
-    
-def loadExData2():
-    return[[0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 5],
-           [0, 0, 0, 3, 0, 4, 0, 0, 0, 0, 3],
-           [0, 0, 0, 0, 4, 0, 0, 1, 0, 4, 0],
-           [3, 3, 4, 0, 0, 0, 0, 2, 2, 0, 0],
-           [5, 4, 5, 0, 0, 0, 0, 5, 5, 0, 0],
-           [0, 0, 0, 0, 5, 0, 1, 0, 0, 5, 0],
-           [4, 3, 4, 0, 0, 0, 0, 5, 5, 0, 1],
-           [0, 0, 0, 4, 0, 4, 0, 0, 0, 0, 4],
-           [0, 0, 0, 2, 0, 2, 5, 0, 0, 1, 2],
-           [0, 0, 0, 0, 5, 0, 0, 0, 0, 4, 0],
-           [1, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0]]
-    
 def ecludSim(inA,inB):
     return 1.0/(1.0 + la.norm(inA - inB))
 
@@ -104,3 +81,23 @@ def imgCompress(numSV=3, thresh=0.8):
     reconMat = U[:,:numSV]*SigRecon*VT[:numSV,:]
     print("****reconstructed matrix using %d singular values******" % numSV)
     printMat(reconMat, thresh)
+
+data = []
+buffer = []
+buffer_line = [0] * 300
+max_num = 0
+with open("anonymous-msweb.data") as file:
+    for line in file:
+        buffer = line.strip().split(',')
+        if(buffer[0] == 'A'):
+            continue
+        if(buffer[0] == 'C'):
+            data.append(buffer_line)
+            buffer_line = [0] * 300
+        if(buffer[0] == 'V'):
+            a = int(buffer[1])
+            buffer_line[a - 1000] = 1
+
+data = array(data[1:])
+print(data)
+U,Sigma,VT = la.svd(data)
