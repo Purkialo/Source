@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from selenium import webdriver 
 
-os.chdir('D:/爬虫/蚂蜂窝')
+os.chdir('D:/')
 
 ## 获得地区url地址
 def find_cat_url(url):  
@@ -46,6 +46,7 @@ def find_city_url(url_list):
                 bs = BeautifulSoup(driver.page_source,'html.parser')
                 url_set = bs.find_all('a',attrs={'data-type':'目的地'})
                 city_name_list = city_name_list +[url_set[i].text.replace('\n','').split()[0] for i in range(0,len(url_set))]
+                print(city_name_list)
                 city_url_list = city_url_list+[url_set[i].attrs['data-id'] for i in range(0,len(url_set))]                
                 js="var q=document.documentElement.scrollTop=800"  
                 driver.execute_script(js)
@@ -64,7 +65,7 @@ url = 'http://www.mafengwo.cn/mdd/'
 url_list = find_cat_url(url)
 city_name_list,city_url_list=find_city_url(url_list)
 city = pd.DataFrame({'city':city_name_list,'id':city_url_list})
-
+print(city)
 
 
 

@@ -10,9 +10,9 @@ from urllib.request import  urlopen
 from urllib  import request  
 from bs4 import BeautifulSoup    
 import pandas as pd
-from pyecharts import Bar,Geo 
+#from pyecharts import Bar,Geo 
 
-os.chdir('D:/爬虫/蚂蜂窝')
+os.chdir('D:')
 
 ## 获得城市url内容
 def get_static_url_content(url):
@@ -97,24 +97,24 @@ for i in range(0,city_list.shape[0]):
         print(i)
         continue
 
-## 绘制图片
-city_base.sort_values('total_city_yj',ascending=False,inplace=True)
-city_jd.sort_values('jd_count',ascending=False,inplace=True)
-city_food.sort_values('food_count',ascending=False,inplace=True)
-attr = city_base['city_name'][0:10]
-v1 = city_base['total_city_yj'][0:10]
-bar = Bar("游记总数量TOP10")
-bar.add("游记总数", attr, v1, is_stack=True)
-bar.render('游记总数量TOP10.html')
-data=[(city_base['city_name'][i],city_base['total_city_yj'][i]) for i in range(0,
-       city_base.shape[0])]
-geo = Geo('全国城市旅游热力图', title_color="#fff",
-          title_pos="center", width=1200,
-          height=600, background_color='#404a59')
-attr, value = geo.cast(data)
-geo.add("", attr, value, visual_range=[0, 30000], visual_text_color="#fff",
-        symbol_size=15, is_visualmap=True,is_roam=False)
-geo.render('蚂蜂窝游记热力图.html')
+# ## 绘制图片
+# city_base.sort_values('total_city_yj',ascending=False,inplace=True)
+# city_jd.sort_values('jd_count',ascending=False,inplace=True)
+# city_food.sort_values('food_count',ascending=False,inplace=True)
+# attr = city_base['city_name'][0:10]
+# v1 = city_base['total_city_yj'][0:10]
+# bar = Bar("游记总数量TOP10")
+# bar.add("游记总数", attr, v1, is_stack=True)
+# bar.render('游记总数量TOP10.html')
+# data=[(city_base['city_name'][i],city_base['total_city_yj'][i]) for i in range(0,
+#        city_base.shape[0])]
+# geo = Geo('全国城市旅游热力图', title_color="#fff",
+#           title_pos="center", width=1200,
+#           height=600, background_color='#404a59')
+# attr, value = geo.cast(data)
+# geo.add("", attr, value, visual_range=[0, 30000], visual_text_color="#fff",
+#         symbol_size=15, is_visualmap=True,is_roam=False)
+# geo.render('蚂蜂窝游记热力图.html')
 
 
 
