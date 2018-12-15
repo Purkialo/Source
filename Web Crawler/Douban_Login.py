@@ -98,7 +98,6 @@ def book_spider(book_tag,session):
             except:
                 intro = ""
                 aut_intro = ""
-                people_num ='0'
             
             book_list.append([book_id, title, rating, author_info, pub_info, intro, aut_intro])
             book_list_buffer = np.array(book_list)
@@ -109,7 +108,6 @@ def book_spider(book_tag,session):
             csvfile_book_list.to_csv(csvfile_book_list_path,encoding="utf_8_sig",index=False)
             print("Book info written!\n")
             book_id += 1
-            try_times=0
         page_num+=1
         print ('Downloading Information From Page %d' % page_num)
 
@@ -141,7 +139,7 @@ def get_review(session, short_review_url,long_review_url,book_id):
     source_code = req.text
     soup = BeautifulSoup(source_code,"html.parser")
     comment_num = soup.find('span',{'id':'total-comments'}).get_text()
-    comment_num = re.sub("\D", "", comment_num)
+    comment_num = re.sub(r"\D", "", comment_num)
     comment_num = int(float(comment_num) / 20) + 1
     print("comments_num : %d"%comment_num)
 
@@ -152,7 +150,7 @@ def get_review(session, short_review_url,long_review_url,book_id):
     review_num = soup.find('div',{'id':'content'}).h1.get_text()
     try:
         review_num = review_num.split('(',1)[1]
-        review_num = re.sub("\D", "", review_num)
+        review_num = re.sub(r"\D", "", review_num)
         review_num = int(float(review_num) / 20) + 1
     except:
         review_num = 1
