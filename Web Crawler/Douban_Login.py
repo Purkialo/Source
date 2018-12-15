@@ -65,7 +65,11 @@ def book_spider(book_tag,session):
         url='http://www.douban.com/tag/'+book_tag+'/book?start='+str(page_num*15)
         print(url)
         time.sleep(np.random.rand()*3)
-        req = session.get(url)
+        try:
+            req = session.get(url)
+        except:
+            print("Get url error!  Over!")
+            return
         source_code = req.text
         
         soup = BeautifulSoup(source_code,"html.parser")
@@ -78,11 +82,11 @@ def book_spider(book_tag,session):
             try:
                 author_info = '作者/译者： ' + '/'.join(desc_list[0:-3])
             except:
-                author_info ='作者/译者： 无'
+                author_info ='作者/译者： 暂无'
             try:
                 pub_info = '出版信息： ' + '/'.join(desc_list[-3:])
             except:
-                pub_info = '出版信息： 无'
+                pub_info = '出版信息： 暂无'
             try:
                 rating = book_info.find('span', {'class':'rating_nums'}).string.strip()
             except:
@@ -100,6 +104,7 @@ def book_spider(book_tag,session):
             book_list_buffer = np.array(book_list)
             book_list_buffer = book_list_buffer.reshape((-1,7))
             csvfile_book_list = pd.DataFrame(book_list_buffer,columns=["1","1","1","1","1","1","1"])
+            #将dataframe写入文件
             csvfile_book_list_path = "bookname.csv"
             csvfile_book_list.to_csv(csvfile_book_list_path,encoding="utf_8_sig",index=False)
             print("Book info written!\n")
@@ -113,27 +118,19 @@ def get_intro(session,url):
     time.sleep(np.random.rand()*5)
     req = session.get(url)
     source_code = req.text
-    # except (urllib2.HTTPError, urllib2.URLError), e:
-    #     print e
     soup = BeautifulSoup(source_code,"html.parser")
     all_intro = soup.find_all('div',{'class':'intro'})
     short_review_url = url[:-13] + "comments"
     long_review_url = url[:-13] + "reviews"
     if(len(all_intro) > 3):
         intro = all_intro[1].get_text().strip()
-        #print(all_intro[1].get_text().strip())
         aut_intro = all_intro[3].get_text().strip()
-        #print(all_intro[3].get_text().strip())
     elif(len(all_intro) > 2):
         intro = all_intro[1].get_text().strip()
-        #print(all_intro[1].get_text().strip())
         aut_intro = all_intro[2].get_text().strip()
-        #print(all_intro[2].get_text().strip())
     else:
         intro = all_intro[0].get_text().strip()
-        #print(all_intro[0].get_text().strip())
         aut_intro = all_intro[1].get_text().strip()
-        #print(all_intro[1].get_text().strip())
     return intro, aut_intro, short_review_url, long_review_url
 
 def get_review(session, short_review_url,long_review_url,book_id):
@@ -153,8 +150,12 @@ def get_review(session, short_review_url,long_review_url,book_id):
     source_code = req.text
     soup = BeautifulSoup(source_code,"html.parser")
     review_num = soup.find('div',{'id':'content'}).h1.get_text()
-    review_num = re.sub("\D", "", review_num)
-    review_num = int(float(review_num) / 20) + 1
+    try:
+        review_num = review_num.split('(',1)[1]
+        review_num = re.sub("\D", "", review_num)
+        review_num = int(float(review_num) / 20) + 1
+    except:
+        review_num = 1
     print("reviews_num : %d"%review_num)
     
     comments = []
@@ -205,7 +206,6 @@ def get_review(session, short_review_url,long_review_url,book_id):
             full_review_id = all_review[i].get('data-rid')
             full_review_url = "https://book.douban.com/j/review/" + str(full_review_id) + "/full"
             #print(full_review_url)
-
             time.sleep(np.random.rand())
             rev_req = session.get(full_review_url)
             rev_source_code = rev_req.text
@@ -228,12 +228,28 @@ def save_to_file(comments,reviews,book_id):
     csvfile_reviews = pd.DataFrame(reviews,columns=["长评论"])
     print(csvfile_comments.shape)
     print(csvfile_reviews.shape)
+    #将dataframe写入文件
     csv_comments_path = "%d_short.csv"%(book_id)
-    csvfile_comments.to_csv(csv_comments_path,encoding="utf_8_sig",index=False)
+    try:
+        csvfile_comments.to_csv(csv_comments_path,encoding="utf_8_sig",index=False)
+        print("Comments written!")
+    except:
+        try:
+            csvfile_comments.to_csv(csv_comments_path,encoding="utf_8_sig",index=False)
+            print("Comments written!")
+        except:
+            print("Comments save Error!")
 
     csv_reviews_path = "%d_long.csv"%(book_id)
-    csvfile_reviews.to_csv(csv_reviews_path,encoding="utf_8_sig",index=False)
-    print("Comments and reviews written!")
+    try:
+        csvfile_reviews.to_csv(csv_reviews_path,encoding="utf_8_sig",index=False)
+        print("Reviews written!")
+    except:
+        try:
+            csvfile_reviews.to_csv(csv_reviews_path,encoding="utf_8_sig",index=False)
+            print("Reviews written!")
+        except:
+            print("Reviews save Error!")
 
 #book_tag_lists = ['历史']
 #book_tag_lists = ['爱情']
